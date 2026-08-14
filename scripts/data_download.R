@@ -24,3 +24,4 @@ gse <- gse[[1]] # достали ExpressionSet
 dim(exprs(gse))
 metadata <- pData(gse) # достали таблицу с информацией об образцах 
 colnames(metadata)
+
