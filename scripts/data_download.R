@@ -6,6 +6,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 # скачивание и активация библиотек
 
 BiocManager::install("GEOquery", force = TRUE)
+
 library("GEOquery")
 library("tidyverse")
 library("data.table")
