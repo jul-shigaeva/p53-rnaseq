@@ -7,6 +7,8 @@ library("tidyverse")
 expr <- readRDS("data/raw_counts.rds")
 metadata <- readRDS("data/geo_metadata.rds")
 
+# РАБОТА С МЕТАДАННЫМИ 
+
 # проверка соответствия GSM 
 
 gsm_expr <- colnames(expr)[-1]
@@ -42,14 +44,14 @@ metadata_rnaseq$p53[is.na(metadata_rnaseq$p53)] <- "WT"
 
 table(str_detect(metadata_rnaseq$title, "IR 10Gy"))
 
-metadata_rnaseq %>%
-  filter(!str_detect(title, "IR 10Gy$")) %>%
-  select(geo_accession, title)
+# какие варианты treatment есть 
 
 unique(str_extract(
   metadata_rnaseq$title,
   "(?<=h, ).+(?=, rep)"
 ))
+
+# создание нового столбца Treatment и форматирование к единообразию 
 
 metadata_rnaseq <- metadata_rnaseq %>%
   mutate(
@@ -57,8 +59,32 @@ metadata_rnaseq <- metadata_rnaseq %>%
     treatment = str_replace(treatment, "\\s+$", "")
   )
 
-metadata_rnaseq
 table(metadata_rnaseq$treatment, useNA = "ifany")
+
+# из статьи и дизайна эксперимента видно, что IR 10Gy + Nutlin не использовался для анализа в Figure 1
+# удаление этих образцов
 
 metadata_fig1 <- metadata_rnaseq %>%
   filter(treatment == "IR 10Gy" | is.na(treatment))
+
+# последняя чистка 
+
+metadata_fig1 <- metadata_fig1 %>%
+  select(-title) 
+rownames(metadata_fig1) <- NULL
+
+# проверка, что для всех полученных образцов есть данные экспрессии 
+
+all(metadata_fig1$geo_accession %in% colnames(expr)) # TRUE
+
+
+# ФИЛЬТРАЦИЯ ДАННЫХ ЭКСПРЕССИИ
+
+expr_fig1 <- expr[, c("GeneID", metadata_fig1$geo_accession)]
+table(colnames(expr_fig1)[-1] == metadata_fig1$geo_accession) # проверка соответствия порядка 
+
+
+# сохранение 
+
+saveRDS(metadata_fig1, "data/metadata_fig1.rds")
+saveRDS(expr_fig1, "data/expr_fig1.rds")
